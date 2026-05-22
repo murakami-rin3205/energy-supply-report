@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>エナジーサプライ アクセス解析レポート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#ffffff;--navy:#f1f5f9;--navy-2:#eef4f8;--navy-card:#ffffff;
+    --cyan:#0891b2;--cyan-2:#0e7490;--cyan-soft:rgba(8,145,178,.10);
+    --ink:#0f2138;--ink-dim:#5b7185;--line:rgba(15,33,56,.14);
+    --good:#0ea371;--warn:#d97706;--bad:#dc2626;--orange:#ea7317;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:#dfe6ee;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;}
+  .deck{display:flex;flex-direction:column;align-items:center;gap:28px;padding:40px 0;}
+  .slide{
+    position:relative;width:1280px;height:720px;flex:0 0 auto;overflow:hidden;
+    background:
+      radial-gradient(900px 540px at 88% -8%, rgba(8,145,178,.10), transparent 60%),
+      radial-gradient(700px 500px at -6% 108%, rgba(14,116,144,.07), transparent 55%),
+      linear-gradient(160deg,#ffffff 0%, #f6f9fb 60%, #eef3f7 100%);
+    color:var(--ink);box-shadow:0 24px 60px rgba(15,33,56,.16);
+  }
+  .slide::before{
+    content:"";position:absolute;inset:0;opacity:.7;pointer-events:none;
+    background-image:linear-gradient(rgba(15,33,56,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(15,33,56,.035) 1px,transparent 1px);
+    background-size:40px 40px;mask-image:radial-gradient(circle at 70% 20%,#000,transparent 80%);
+  }
+  .pad{position:relative;z-index:2;padding:54px 70px;height:100%;display:flex;flex-direction:column;}
+  .kicker{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.16em;color:var(--cyan);text-transform:uppercase;}
+  .kicker .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(8,145,178,.5);}
+  .h1{font-size:34px;font-weight:900;line-height:1.28;margin-top:12px;}
+  .h1 .accent{color:var(--cyan);}
+  .lead{color:var(--ink-dim);font-size:15px;line-height:1.65;margin-top:10px;max-width:980px;}
+  .pagenum{position:absolute;right:44px;bottom:26px;font-size:12px;color:var(--ink-dim);letter-spacing:.1em;z-index:3;}
+  .brand{position:absolute;left:44px;bottom:26px;font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--ink-dim);z-index:3;}
+  .brand b{color:var(--cyan);}
+  .head-row{margin-bottom:18px;}
+
+  /* cover */
+  .cover .pad{justify-content:center;}
+  .cover .big{font-size:52px;font-weight:900;line-height:1.2;}
+  .cover .big .accent{color:var(--cyan);}
+  .cover .sub{margin-top:18px;font-size:17px;color:var(--ink-dim);line-height:1.7;max-width:760px;}
+  .cover .tag{display:inline-block;align-self:flex-start;margin-top:28px;padding:10px 20px;border:1px solid var(--cyan);border-radius:999px;color:var(--cyan);font-weight:700;font-size:13px;letter-spacing:.08em;}
+  .cover-deco{position:absolute;right:-30px;top:50%;transform:translateY(-50%);z-index:1;}
+  .period{margin-top:14px;font-size:14px;color:var(--ink-dim);font-weight:700;}
+
+  /* KPI cards */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:6px;}
+  .kpi{background:var(--navy-card);border:1px solid var(--line);border-radius:14px;border-top:3px solid var(--cyan);padding:22px 22px;box-shadow:0 6px 18px rgba(15,33,56,.07);}
+  .kpi .lbl{font-size:13px;color:var(--ink-dim);font-weight:700;}
+  .kpi .val{font-size:38px;font-weight:900;color:var(--ink);margin-top:8px;line-height:1;}
+  .kpi .val small{font-size:17px;font-weight:700;color:var(--ink-dim);margin-left:3px;}
+  .kpi .sub{font-size:12px;color:var(--ink-dim);margin-top:8px;line-height:1.5;}
+  .kpi .delta{font-weight:700;}
+  .delta.up{color:var(--good);}
+  .delta.down{color:var(--bad);}
+  .insight{margin-top:22px;padding:18px 22px;border-radius:12px;background:linear-gradient(120deg,var(--cyan-soft),rgba(14,116,144,.04));border:1px solid var(--cyan);box-shadow:0 6px 20px rgba(8,145,178,.10);}
+  .insight .il{font-size:12px;font-weight:900;letter-spacing:.16em;color:var(--cyan);}
+  .insight p{margin-top:7px;font-size:14.5px;line-height:1.7;}
+  .insight b{color:var(--ink);}
+
+  /* two column generic */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:6px;flex:1;}
+  .panel{background:var(--navy-card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;box-shadow:0 6px 18px rgba(15,33,56,.07);display:flex;flex-direction:column;}
+  .panel .pt{font-size:16px;font-weight:700;color:var(--ink);}
+  .panel .ps{font-size:12px;color:var(--ink-dim);margin-top:3px;}
+
+  /* horizontal bar list */
+  .bars{margin-top:16px;display:flex;flex-direction:column;gap:13px;}
+  .bar-row{display:grid;grid-template-columns:130px 1fr 56px;align-items:center;gap:12px;}
+  .bar-row .bl{font-size:13px;font-weight:700;color:var(--ink);}
+  .bar-track{height:22px;background:var(--navy-2);border-radius:6px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--cyan-2));}
+  .bar-fill.alt{background:linear-gradient(90deg,#5eb3c7,#0891b2);}
+  .bar-val{font-size:13px;font-weight:700;color:var(--ink);text-align:right;}
+
+  /* ranked list (pages) */
+  .rank{margin-top:14px;display:flex;flex-direction:column;gap:0;}
+  .rank-row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--line);}
+  .rank-row:last-child{border-bottom:none;}
+  .rk{flex:0 0 auto;width:26px;height:26px;border-radius:7px;background:var(--cyan-soft);border:1px solid var(--cyan);color:var(--cyan);font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .rk.dim{background:rgba(15,33,56,.05);border-color:var(--line);color:var(--ink-dim);}
+  .rn{flex:1;font-size:14px;font-weight:500;color:var(--ink);}
+  .rv{font-size:14px;font-weight:700;color:var(--ink);}
+
+  /* event funnel */
+  .funnel{margin-top:16px;display:flex;flex-direction:column;gap:11px;}
+  .fn-row{display:grid;grid-template-columns:140px 1fr 64px;align-items:center;gap:12px;}
+  .fn-row .fl{font-size:13px;font-weight:700;color:var(--ink);font-family:ui-monospace,monospace;}
+  .fn-track{height:24px;background:var(--navy-2);border-radius:6px;overflow:hidden;}
+  .fn-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--cyan-2));display:flex;align-items:center;}
+  .fn-val{font-size:13px;font-weight:700;color:var(--ink);text-align:right;}
+
+  /* geo list */
+  .geo{margin-top:8px;display:flex;flex-direction:column;gap:0;}
+  .geo-row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);}
+  .geo-row:last-child{border-bottom:none;}
+  .geo-row .gn{flex:1;font-size:13.5px;font-weight:500;}
+  .geo-row .gbar{flex:0 0 130px;height:8px;background:var(--navy-2);border-radius:4px;overflow:hidden;}
+  .geo-row .gbar i{display:block;height:100%;background:var(--cyan);border-radius:4px;}
+  .geo-row .gv{flex:0 0 50px;text-align:right;font-size:13.5px;font-weight:700;}
+
+  /* takeaways */
+  .takes{display:flex;flex-direction:column;gap:14px;margin-top:14px;flex:1;justify-content:center;}
+  .take{display:flex;gap:16px;align-items:flex-start;padding:18px 22px;background:var(--navy-card);border:1px solid var(--line);border-left:4px solid var(--cyan);border-radius:12px;box-shadow:0 6px 18px rgba(15,33,56,.06);}
+  .take .tn{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--cyan-soft);border:1px solid var(--cyan);color:var(--cyan);font-weight:900;display:flex;align-items:center;justify-content:center;}
+  .take b{font-size:16px;}
+  .take p{font-size:13px;color:var(--ink-dim);margin-top:4px;line-height:1.6;}
+  .legend{display:flex;gap:18px;margin-top:12px;font-size:12px;color:var(--ink-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- ===== 1 COVER ===== -->
+  <section class="slide cover">
+    <svg class="cover-deco" width="520" height="620" viewBox="0 0 520 620" fill="none">
+      <circle cx="360" cy="310" r="240" stroke="rgba(8,145,178,.16)" stroke-width="1.5"/>
+      <circle cx="360" cy="310" r="170" stroke="rgba(8,145,178,.24)" stroke-width="1.5"/>
+      <path d="M360 200 v-30 M360 420 v30 M250 310 h-30 M470 310 h30 M283 233 l-21 -21 M437 387 l21 21 M437 233 l21 -21 M283 387 l-21 21" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="360" cy="310" r="58" fill="rgba(8,145,178,.08)" stroke="var(--cyan)" stroke-width="1.5"/>
+      <path d="M360 280 v60 M345 295 h30 M345 325 h30" stroke="var(--cyan)" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div class="pad">
+      <div class="kicker"><span class="dot"></span>WEBアクセス解析レポート ／ 社内共有</div>
+      <h1 class="big">エナジーサプライ<br><span class="accent">サイト分析</span>レポート</h1>
+      <p class="sub">Google Analytics（GA4）のデータをもとに、サイトの集客状況・人気コンテンツ・ユーザー行動を整理しました。営業・マーケ施策の検討材料としてご活用ください。</p>
+      <div class="period">対象期間:直近30日（〜2026年5月21日時点）</div>
+      <span class="tag">最適AI ／ データ分析</span>
+    </div>
+    <div class="brand"><b>最適</b>AI</div>
+    <div class="pagenum">01 / 05</div>
+  </section>
+
+  <!-- ===== 2 KPIサマリー ===== -->
+  <section class="slide">
+    <div class="pad">
+      <div class="head-row">
+        <div class="kicker"><span class="dot"></span>サマリー ／ 主要指標</div>
+        <h1 class="h1">直近30日で <span class="accent">1,261人</span> が訪問。<span class="accent">94%</span> が新規ユーザー</h1>
+        <p class="lead">サイトは新規流入が中心。多くの人が「初めて訪れる」状態で、認知拡大フェーズにあることがわかります。</p>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="lbl">アクティブユーザー</div><div class="val">1,261</div><div class="sub">直近30日の訪問者数</div></div>
+        <div class="kpi"><div class="lbl">新規ユーザー</div><div class="val">1,188</div><div class="sub">全体の<b>約94%</b>が新規</div></div>
+        <div class="kpi"><div class="lbl">平均エンゲージ時間</div><div class="val">1<small>分</small>03<small>秒</small></div><div class="sub">1人あたりの滞在時間</div></div>
+        <div class="kpi"><div class="lbl">ページ表示（PV）</div><div class="val">3,349</div><div class="sub">page_view イベント数</div></div>
+      </div>
+      <div class="kpis" style="margin-top:18px;">
+        <div class="kpi" style="border-top-color:var(--ink-dim);"><div class="lbl">セッション総数</div><div class="val">1,601</div><div class="sub">全チャネル合計</div></div>
+        <div class="kpi" style="border-top-color:var(--ink-dim);"><div class="lbl">スクロール</div><div class="val">1,189</div><div class="sub">scroll イベント</div></div>
+        <div class="kpi" style="border-top-color:var(--ink-dim);"><div class="lbl">フォーム開始</div><div class="val">96</div><div class="sub">form_start イベント</div></div>
+        <div class="kpi" style="border-top-color:var(--ink-dim);"><div class="lbl">クリック</div><div class="val">79</div><div class="sub">click イベント</div></div>
+      </div>
+      <div class="insight">
+        <span class="il">SO WHAT?（示唆）</span>
+        <p>新規94%・平均滞在1分超は、<b>コンテンツが一定読まれている</b>サイン。一方で<b>フォーム開始は96件</b>と、訪問数（1,261）に対して伸びしろが大きい。<b>問い合わせ導線の改善</b>が次の打ち手。</p>
+      </div>
+    </div>
+    <div class="brand"><b>最適</b>AI</div>
+    <div class="pagenum">02 / 05</div>
+  </section>
+
+  <!-- ===== 3 流入チャネル & 国別 ===== -->
+  <section class="slide">
+    <div class="pad">
+      <div class="head-row">
+        <div class="kicker"><span class="dot"></span>集客 ／ どこから来ているか</div>
+        <h1 class="h1">流入の<span class="accent">65%</span>が検索（Organic Search）経由</h1>
+      </div>
+      <div class="cols">
+        <div class="panel">
+          <div class="pt">セッションのチャネル別内訳</div>
+          <div class="ps">どの経路でサイトに来たか（セッション数）</div>
+          <div class="bars">
+            <div class="bar-row"><span class="bl">Organic Search</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">1,042</span></div>
+            <div class="bar-row"><span class="bl">Direct</span><div class="bar-track"><div class="bar-fill" style="width:42.8%"></div></div><span class="bar-val">446</span></div>
+            <div class="bar-row"><span class="bl">Referral</span><div class="bar-track"><div class="bar-fill" style="width:8.3%"></div></div><span class="bar-val">86</span></div>
+            <div class="bar-row"><span class="bl">Unassigned</span><div class="bar-track"><div class="bar-fill" style="width:1.6%"></div></div><span class="bar-val">17</span></div>
+            <div class="bar-row"><span class="bl">Organic Social</span><div class="bar-track"><div class="bar-fill" style="width:0.9%"></div></div><span class="bar-val">9</span></div>
+            <div class="bar-row"><span class="bl">Organic Video</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-val">1</span></div>
+          </div>
+          <div class="insight" style="margin-top:auto;">
+            <span class="il">POINT</span>
+            <p>検索＋直接で全体の<b>約93%</b>。SNS・動画はほぼ未活用で、<b>伸ばす余地</b>がある。</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="pt">国別アクティブユーザー</div>
+          <div class="ps">アクセス元の国（上位7カ国）</div>
+          <div class="geo">
+            <div class="geo-row"><span class="gn">🇯🇵 Japan</span><span class="gbar"><i style="width:100%"></i></span><span class="gv">1,203</span></div>
+            <div class="geo-row"><span class="gn">🇺🇸 United States</span><span class="gbar"><i style="width:1.7%"></i></span><span class="gv">21</span></div>
+            <div class="geo-row"><span class="gn">🇸🇬 Singapore</span><span class="gbar"><i style="width:1.3%"></i></span><span class="gv">16</span></div>
+            <div class="geo-row"><span class="gn">🇨🇳 China</span><span class="gbar"><i style="width:0.7%"></i></span><span class="gv">8</span></div>
+            <div class="geo-row"><span class="gn">🇩🇪 Germany</span><span class="gbar"><i style="width:0.3%"></i></span><span class="gv">4</span></div>
+            <div class="geo-row"><span class="gn">🇮🇳 India</span><span class="gbar"><i style="width:0.25%"></i></span><span class="gv">3</span></div>
+            <div class="geo-row"><span class="gn">🇦🇲 Armenia</span><span class="gbar"><i style="width:0.1%"></i></span><span class="gv">1</span></div>
+          </div>
+          <div class="insight" style="margin-top:auto;">
+            <span class="il">POINT</span>
+            <p>訪問者の<b>約96%が国内</b>。狙うべき顧客層に正しくリーチできている。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="brand"><b>最適</b>AI</div>
+    <div class="pagenum">03 / 05</div>
+  </section>
+
+  <!-- ===== 4 人気ページ & イベント ===== -->
+  <section class="slide">
+    <div class="pad">
+      <div class="head-row">
+        <div class="kicker"><span class="dot"></span>コンテンツ ／ 何が見られているか</div>
+        <h1 class="h1">トップページに次いで<span class="accent">「会社概要」「社員紹介」</span>が人気</h1>
+      </div>
+      <div class="cols">
+        <div class="panel">
+          <div class="pt">人気ページ TOP7（表示回数）</div>
+          <div class="ps">どのページが多く見られたか</div>
+          <div class="rank">
+            <div class="rank-row"><span class="rk">1</span><span class="rn">エナジーサプライ（トップ）</span><span class="rv">1,123</span></div>
+            <div class="rank-row"><span class="rk">2</span><span class="rn">会社概要</span><span class="rv">739</span></div>
+            <div class="rank-row"><span class="rk">3</span><span class="rn">社員紹介</span><span class="rv">289</span></div>
+            <div class="rank-row"><span class="rk dim">4</span><span class="rn">社員紹介アーカイブ</span><span class="rv">183</span></div>
+            <div class="rank-row"><span class="rk dim">5</span><span class="rn">お問い合わせ</span><span class="rv">155</span></div>
+            <div class="rank-row"><span class="rk dim">6</span><span class="rn">施工事例アーカイブ</span><span class="rv">150</span></div>
+            <div class="rank-row"><span class="rk dim">7</span><span class="rn">私たちの想い</span><span class="rv">98</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="pt">ユーザー行動（イベント数）</div>
+          <div class="ps">サイト上でどんな行動が起きたか</div>
+          <div class="funnel">
+            <div class="fn-row"><span class="fl">page_view</span><div class="fn-track"><div class="fn-fill" style="width:100%"></div></div><span class="fn-val">3,349</span></div>
+            <div class="fn-row"><span class="fl">user_engagement</span><div class="fn-track"><div class="fn-fill" style="width:81%"></div></div><span class="fn-val">2,727</span></div>
+            <div class="fn-row"><span class="fl">session_start</span><div class="fn-track"><div class="fn-fill" style="width:48%"></div></div><span class="fn-val">1,602</span></div>
+            <div class="fn-row"><span class="fl">scroll</span><div class="fn-track"><div class="fn-fill" style="width:35.5%"></div></div><span class="fn-val">1,189</span></div>
+            <div class="fn-row"><span class="fl">first_visit</span><div class="fn-track"><div class="fn-fill" style="width:35.5%"></div></div><span class="fn-val">1,188</span></div>
+            <div class="fn-row"><span class="fl">form_start</span><div class="fn-track"><div class="fn-fill" style="width:2.9%"></div></div><span class="fn-val">96</span></div>
+            <div class="fn-row"><span class="fl">click</span><div class="fn-track"><div class="fn-fill" style="width:2.4%"></div></div><span class="fn-val">79</span></div>
+          </div>
+          <div class="insight" style="margin-top:auto;">
+            <span class="il">POINT</span>
+            <p>「会社概要・社員紹介」が上位＝<b>“どんな会社か”を確かめる訪問</b>が多い。信頼づくりのコンテンツが効いている。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="brand"><b>最適</b>AI</div>
+    <div class="pagenum">04 / 05</div>
+  </section>
+
+  <!-- ===== 5 まとめ・示唆 ===== -->
+  <section class="slide">
+    <div class="pad">
+      <div class="head-row">
+        <div class="kicker"><span class="dot"></span>まとめ ／ ネクストアクション</div>
+        <h1 class="h1">「集客は順調、<span class="accent">あとは問い合わせへの転換</span>」が次の課題</h1>
+      </div>
+      <div class="takes">
+        <div class="take"><div class="tn">1</div><div><b>集客チャネルは検索が主軸。SNS活用は伸びしろ</b><p>セッションの65%がOrganic Search。一方Organic Social/Videoは合計10件未満。SNS発信を強化すれば、新たな流入層を開拓できる。</p></div></div>
+        <div class="take"><div class="tn">2</div><div><b>「人柄・信頼」を見に来ている → 強みを前面に</b><p>会社概要・社員紹介・私たちの想いが上位。価格より“誰がやるか”で選ばれる傾向。事例・実績ページの拡充が有効。</p></div></div>
+        <div class="take"><div class="tn">3</div><div><b>問い合わせ転換の改善が最優先</b><p>訪問1,261に対しフォーム開始は96（約7.6%）。お問い合わせページへの導線・CTAボタンの見直しで、商談数の底上げが見込める。</p></div></div>
+      </div>
+      <div class="insight">
+        <span class="il">本レポートの結論</span>
+        <p><b>「人が来て・読まれている」サイトは出来ている。次は“行動（問い合わせ）”への一押し」</b>。CTA改善とSNS強化を、次月の重点施策として提案します。</p>
+      </div>
+    </div>
+    <div class="brand"><b>最適</b>AI</div>
+    <div class="pagenum">05 / 05</div>
+  </section>
+
+</div>
+</body>
+</html>
